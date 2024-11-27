@@ -21,76 +21,30 @@ let BooksService = class BooksService {
     constructor(booksRepository) {
         this.booksRepository = booksRepository;
     }
-    async create(createBookDto) {
-        try {
-            if (!createBookDto.title ||
-                !createBookDto.author ||
-                !createBookDto.isbn) {
-                throw new common_1.BadRequestException('Title, Author, and ISBN are required');
-            }
-            const book = this.booksRepository.create(createBookDto);
-            return await this.booksRepository.save(book);
-        }
-        catch (error) {
-            if (error instanceof common_1.BadRequestException) {
-                throw error;
-            }
-            throw new common_1.InternalServerErrorException('Error occurred while creating the book');
-        }
-    }
     async findAll() {
-        try {
-            return await this.booksRepository.find();
-        }
-        catch (error) {
-            throw new common_1.InternalServerErrorException('Error occurred while retrieving books');
-        }
+        return await this.booksRepository.find();
     }
     async findOne(id) {
-        try {
-            const book = await this.booksRepository.findOne({ where: { id } });
-            if (!book) {
-                throw new common_1.NotFoundException(`Book with id ${id} not found`);
-            }
-            return book;
+        const book = await this.booksRepository.findOne({
+            where: { id },
+        });
+        if (!book) {
+            throw new common_1.NotFoundException(`Book with id ${id} not found`);
         }
-        catch (error) {
-            if (error instanceof common_1.NotFoundException) {
-                throw error;
-            }
-            throw new common_1.InternalServerErrorException('Error occurred while retrieving the book');
-        }
+        return book;
+    }
+    async create(createBookDto) {
+        const book = this.booksRepository.create(createBookDto);
+        return await this.booksRepository.save(book);
     }
     async update(id, updateBookDto) {
-        try {
-            const book = await this.booksRepository.findOne({ where: { id } });
-            if (!book) {
-                throw new common_1.NotFoundException(`Book with id ${id} not found`);
-            }
-            Object.assign(book, updateBookDto);
-            return await this.booksRepository.save(book);
-        }
-        catch (error) {
-            if (error instanceof common_1.NotFoundException) {
-                throw error;
-            }
-            throw new common_1.InternalServerErrorException('Error occurred while updating the book');
-        }
+        await this.findOne(id);
+        await this.booksRepository.update(id, updateBookDto);
+        return this.findOne(id);
     }
     async remove(id) {
-        try {
-            const book = await this.booksRepository.findOne({ where: { id } });
-            if (!book) {
-                throw new common_1.NotFoundException(`Book with id ${id} not found`);
-            }
-            await this.booksRepository.remove(book);
-        }
-        catch (error) {
-            if (error instanceof common_1.NotFoundException) {
-                throw error;
-            }
-            throw new common_1.InternalServerErrorException('Error occurred while deleting the book');
-        }
+        const book = await this.findOne(id);
+        await this.booksRepository.remove(book);
     }
 };
 exports.BooksService = BooksService;
